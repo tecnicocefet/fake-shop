@@ -1,4 +1,4 @@
-#deployment do banco de dados
+# Deployment do banco de dados
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -42,8 +42,7 @@ spec:
 
 ---
 
-#deployment da aplicação web
-
+# Deployment da aplicação web
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -65,15 +64,15 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: postgre
+          value: postgre  # Nome do serviço PostgreSQL, já é 'postgre'
         - name: DB_USER
-          value: ecommerce
+          value: fakeshop  # Nome do usuário do banco de dados
         - name: DB_PASSWORD
-          value: Pg1234
+          value: Pg1234  # Senha do banco de dados
         - name: DB_NAME
-          value: ecommerce
+          value: fakeshop  # Nome do banco de dados
         - name: FLASK_APP
-          value: index.py
+          value: index.py  # Nome do arquivo principal da aplicação Flask
 
 ---
 
@@ -89,5 +88,3 @@ spec:
       port: 80
       targetPort: 5000
   type: LoadBalancer
-
-  
