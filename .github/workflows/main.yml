@@ -4,30 +4,32 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+
 jobs:
+  # Job de Construção e Envio da Imagem Docker
   ci:
     runs-on: ubuntu-latest
     steps:
       - name: Obter o código do projeto
         uses: actions/checkout@v4.2.2
       
-        
       - name: Autenticando no Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         
-      - name: Construção e envio da imagem docker
+      - name: Construção e envio da imagem Docker
         uses: docker/build-push-action@v6
         with:
           context: ./src
           push: true
           file: ./src/Dockerfile
           tags: |
-            tecnicocefet/fake-shop:latestg
+            tecnicocefet/fake-shop:latest
             tecnicocefet/fake-shop:v${{github.run_number}} 
      
+  # Job de Deploy no Kubernetes
   cd:
     runs-on: ubuntu-latest
     needs: [ci]
@@ -46,13 +48,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       
-      
       - name: Configurar o kubectl
-        run:  aws eks update-kubeconfig --name eks-aula 
-      - name: Deploy dos maifestos no kubernetes
+        run: aws eks update-kubeconfig --name eks-aula 
+
+      - name: Deploy dos manifests da aplicação no Kubernetes
         uses: Azure/k8s-deploy@v5
         with:
           manifests: |
-             ./k8s/deployment.yml
+            ./k8s/deployment.yml
           images: |
-              tecnicocefet/fake-shop:v${{github.run_number}}
+            tecnicocefet/fake-shop:v${{github.run_number}}
+
+      # Deploy do Prometheus e Grafana para monitoramento
+      - name: Deploy do Prometheus e Grafana
+        run: kubectl apply -f ./prometheus/deploy-prometheus.yml
+
+      - name: Verificar serviços de monitoramento
+        run: |
+          kubectl get pods -n monitoring
+          kubectl get svc -n monitoring
