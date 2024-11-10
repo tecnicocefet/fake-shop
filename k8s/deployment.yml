@@ -65,13 +65,13 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: postgres
+          value: localhost
         - name: DB_USER
-          value: postgres
+          value: ecommerce
         - name: DB_PASSWORD
-          value: postgres
+          value: Pg1234
         - name: DB_NAME
-          value: postgres
+          value: ecommerce
         - name: FLASK_APP
           value: index.py
 
