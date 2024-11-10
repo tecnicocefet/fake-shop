@@ -65,7 +65,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: localhost
+          value: postgre
         - name: DB_USER
           value: ecommerce
         - name: DB_PASSWORD
