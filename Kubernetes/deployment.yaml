@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fakeshop
+spec:
+  replicas: 2  # Número de réplicas do pod
+  selector:
+    matchLabels:
+      app: fakeshop
+  template:
+    metadata:
+      labels:
+        app: fakeshop
+    spec:
+      containers:
+      - name: fakeshop
+        image: tecnicocefet/fake-shop:v1  # Imagem da aplicação Fake Shop
+        ports:
+        - containerPort: 5000  # Porta exposta pelo container
+        env:
+        - name: DB_HOST
+          value: postgre  # Nome do serviço PostgreSQL (você já deve ter criado esse serviço)
+        - name: DB_USER
+          value: fakeshop  # Nome do usuário do banco de dados
+        - name: DB_PASSWORD
+          value: Pg1234  # Senha do banco de dados
+        - name: DB_NAME
+          value: fakeshop  # Nome do banco de dados
+        - name: FLASK_APP
+          value: index.py  # Nome do arquivo principal da aplicação Flask

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fakeshop-service
+spec:
+  selector:
+    app: fakeshop
+  ports:
+    - protocol: TCP
+      port: 80  # Porta externa exposta para o LoadBalancer
+      targetPort: 5000  # Porta que a aplicação está ouvindo
+  type: LoadBalancer  # Expondo o serviço externamente através de LoadBalancer
