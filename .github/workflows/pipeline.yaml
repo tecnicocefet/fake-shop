@@ -25,7 +25,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:$GITHUB_SHA"
-          docker build -t $IMAGE_TAG .
+          docker build -t $IMAGE_TAG ./src  # Ajuste aqui para a pasta src
           docker tag $IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/fake-shop:latest
           docker push $IMAGE_TAG
           docker push ${{ secrets.DOCKER_USERNAME }}/fake-shop:latest
@@ -41,13 +41,13 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
-          version: 'v1.24.0' 
+          version: 'v1.24.0'
 
       - name: Set up Kubeconfig
         run: |
           echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=kubeconfig.yaml
-          kubectl config use-context <seu-cluster-context>  # Substitua pelo nome do seu contexto do Kubernetes
+          kubectl config use-context default  # Substitua 'default' pelo seu contexto do cluster, se necessário
 
       - name: Apply Kubernetes manifests
         run: |
