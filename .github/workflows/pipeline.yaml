@@ -74,20 +74,20 @@ jobs:
       - name: Replace image tag in manifests dynamically
         run: |
           IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fakeshop:${GITHUB_SHA}"
-          sed -i "s|image:.*|image: $IMAGE_TAG|g" Kubernetes/deployment.yaml
+          sed -i "s|image:.*|image: $IMAGE_TAG|g" Kubernetes/deployments.yaml
 
-      - name: Debug deployment.yaml
+      - name: Debug deployments.yaml
         run: |
-          cat Kubernetes/deployment.yaml
+          cat Kubernetes/deployments.yaml
 
       - name: Verify Kubernetes manifests
         run: |
-          ls -l Kubernetes/deployment.yaml Kubernetes/service.yaml
+          ls -l Kubernetes/deployments.yaml Kubernetes/services.yaml
 
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f Kubernetes/deployment.yaml
-          kubectl apply -f Kubernetes/service.yaml
+          kubectl apply -f Kubernetes/deployments.yaml
+          kubectl apply -f Kubernetes/services.yaml
 
       - name: Debug rollout status
         run: |
@@ -109,3 +109,24 @@ jobs:
             exit 1
           fi
           kubectl logs $POD_NAME -n default
+
+      - name: Verify PostgreSQL pod
+        run: |
+          echo "Listing pods for PostgreSQL..."
+          kubectl get pods -l app=postgre -o wide || kubectl get pods --all-namespaces
+
+      - name: Show logs from PostgreSQL pod
+        run: |
+          echo "Retrieving logs from the PostgreSQL pod..."
+          POSTGRES_POD_NAME=$(kubectl get pods -l app=postgre -o jsonpath='{.items[0].metadata.name}' -n default)
+          if [ -z "$POSTGRES_POD_NAME" ]; then
+            echo "No pods found with the label app=postgre in default namespace"
+            kubectl get pods --all-namespaces
+            exit 1
+          fi
+          kubectl logs $POSTGRES_POD_NAME -n default
+
+      - name: Check cluster events
+        run: |
+          echo "Checking cluster events..."
+          kubectl get events -n default --sort-by=.metadata.creationTimestamp

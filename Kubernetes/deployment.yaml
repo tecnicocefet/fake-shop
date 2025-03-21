@@ -6,7 +6,7 @@ metadata:
   labels:
     app: fakeshop
 spec:
-  replicas: 2  # Número de réplicas
+  replicas: 2
   selector:
     matchLabels:
       app: fakeshop
@@ -21,25 +21,27 @@ spec:
     spec:
       containers:
       - name: fakeshop
-        image: tecnicocefet/fakeshop:latest  # Imagem da aplicação
+        image: tecnicocefet/fakeshop:latest
         ports:
-        - containerPort: 5000  # Porta utilizada pela aplicação
+        - containerPort: 5000
         env:
         - name: DB_HOST
-          value: postgre  # Nome do serviço do PostgreSQL
+          value: postgre
         - name: DB_PORT
-          value: "5432"  # Porta do banco de dados
+          value: "5432"
         - name: DB_USER
-          value: fakeshop  # Usuário do banco de dados
+          value: fakeshop
         - name: DB_PASSWORD
-          value: Pg1234  # Senha do banco de dados
+          value: Pg1234
         - name: DB_NAME
-          value: fakeshop  # Nome do banco de dados
+          value: fakeshop
+        - name: DATABASE_URL
+          value: "postgresql+psycopg://fakeshop:Pg1234@postgre:5432/fakeshop?sslmode=disable"
         readinessProbe:
           httpGet:
             path: /
             port: 5000
-          initialDelaySeconds: 20  # Tempo maior para inicialização
+          initialDelaySeconds: 60
           timeoutSeconds: 5
           periodSeconds: 10
           failureThreshold: 3
@@ -47,7 +49,7 @@ spec:
           httpGet:
             path: /
             port: 5000
-          initialDelaySeconds: 30  # Verificação de vida
+          initialDelaySeconds: 90
           timeoutSeconds: 5
           periodSeconds: 10
           failureThreshold: 3
@@ -58,9 +60,7 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
-
 ---
-
 # Deployment do banco de dados PostgreSQL
 apiVersion: apps/v1
 kind: Deployment
@@ -69,7 +69,7 @@ metadata:
   labels:
     app: postgre
 spec:
-  replicas: 1  # Réplica única para o banco
+  replicas: 1
   selector:
     matchLabels:
       app: postgre
@@ -85,11 +85,14 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_USER
-          value: fakeshop  # Usuário do banco de dados
+          value: fakeshop
         - name: POSTGRES_PASSWORD
-          value: Pg1234  # Senha do banco de dados
+          value: Pg1234
         - name: POSTGRES_DB
-          value: fakeshop  # Nome do banco de dados
+          value: fakeshop
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-data
         resources:
           requests:
             memory: "1Gi"
@@ -102,3 +105,19 @@ spec:
             port: 5432
           initialDelaySeconds: 30
           periodSeconds: 10
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+# PersistentVolumeClaim (PVC) para o PostgreSQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

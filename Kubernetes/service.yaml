@@ -1,4 +1,4 @@
-# Service da aplicação web (FakeShop)
+# Service da aplicação FakeShop
 apiVersion: v1
 kind: Service
 metadata:
@@ -10,12 +10,10 @@ spec:
     app: fakeshop
   ports:
     - protocol: TCP
-      port: 80  # Porta externa
-      targetPort: 5000  # Porta interna da aplicação
-  type: LoadBalancer  # Expor o serviço publicamente
-
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
 ---
-
 # Service do banco de dados PostgreSQL
 apiVersion: v1
 kind: Service
@@ -28,6 +26,6 @@ spec:
     app: postgre
   ports:
     - protocol: TCP
-      port: 5432  # Porta padrão do PostgreSQL
+      port: 5432
       targetPort: 5432
-  type: ClusterIP  # Serviço interno
+  type: ClusterIP
