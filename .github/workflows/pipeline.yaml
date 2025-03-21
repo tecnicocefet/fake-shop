@@ -45,7 +45,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG_CONTENT }}" > kubeconfig.yaml
+          echo -e "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=kubeconfig.yaml
           kubectl config use-context do-nyc1-k8s-devops
 
@@ -53,9 +53,9 @@ jobs:
         run: |
           cat kubeconfig.yaml
 
-      - name: Verify Kubernetes context
+      - name: List Kubernetes contexts
         run: |
-          kubectl config current-context
+          kubectl config get-contexts
 
       - name: Test cluster connection
         run: |
@@ -72,5 +72,5 @@ jobs:
 
       - name: Verify deployment
         run: |
-          POD_NAME=$(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
-          kubectl describe pod $POD_NAME
+          kubectl get pods -l app=fake-shop
+          kubectl describe pod $(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
