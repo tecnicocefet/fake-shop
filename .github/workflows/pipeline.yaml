@@ -91,5 +91,10 @@ jobs:
 
       - name: Show logs from first pod
         run: |
-          POD_NAME=$(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
-          kubectl logs $POD_NAME
+          POD_NAME=$(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}' -n default)
+          if [ -z "$POD_NAME" ]; then
+            echo "No pods found with the label app=fake-shop in default namespace"
+            kubectl get pods --all-namespaces
+            exit 1
+          fi
+          kubectl logs $POD_NAME -n default
