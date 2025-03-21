@@ -1,25 +1,74 @@
+# Deployment do banco de dados
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgre
+spec:
+  selector:
+    matchLabels:
+      app: postgre
+  template:
+    metadata:
+      labels:
+        app: postgre
+    spec:
+      containers:
+      - name: postgre
+        image: postgres:13.16
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: fakeshop
+        - name: POSTGRES_PASSWORD
+          value: Pg1234
+        - name: POSTGRES_DB
+          value: fakeshop
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgre
+spec:
+  selector:
+    app: postgre
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+---
+
+# Deployment da aplicação web
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fakeshop
 spec:
-  replicas: 2  # Número de réplicas do pod
+  replicas: 4
   selector:
     matchLabels:
       app: fakeshop
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '5000'
+        prometheus.io/path: '/metrics'
       labels:
         app: fakeshop
     spec:
       containers:
       - name: fakeshop
-        image: tecnicocefet/fake-shop:v1  # Imagem da aplicação Fake Shop
+        image: tecnicocefet/fake-shop:v1
         ports:
-        - containerPort: 5000  # Porta exposta pelo container
+        - containerPort: 5000
         env:
         - name: DB_HOST
-          value: postgre  # Nome do serviço PostgreSQL (você já deve ter criado esse serviço)
+          value: postgre  # Nome do serviço PostgreSQL, já é 'postgre'
         - name: DB_USER
           value: fakeshop  # Nome do usuário do banco de dados
         - name: DB_PASSWORD
@@ -28,3 +77,18 @@ spec:
           value: fakeshop  # Nome do banco de dados
         - name: FLASK_APP
           value: index.py  # Nome do arquivo principal da aplicação Flask
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fakeshop
+spec:
+  selector:
+    app: fakeshop
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
