@@ -83,7 +83,7 @@ jobs:
 
       - name: Wait for Deployment rollout
         run: |
-          kubectl rollout status deployment/fake-shop-deployment
+          kubectl rollout status deployment/fakeshop
 
       - name: Verify deployment pods
         run: |
