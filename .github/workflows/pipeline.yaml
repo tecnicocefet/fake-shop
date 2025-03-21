@@ -46,15 +46,27 @@ jobs:
         with:
           version: 'v1.24.0'
 
-      - name: Set up Kubeconfig using token
+      - name: Set up kubeconfig using token and certificate
         run: |
-          kubectl config set-cluster do-nyc1-k8s-devops --server=https://41129ac3-4d1c-458c-9752-c81dd268c049.k8s.ondigitalocean.com
+          # Salva o certificado da CA em um arquivo
+          echo "${{ secrets.DO_K8S_CA }}" | base64 -d > ca.crt
+          
+          # Configura o kubeconfig com o servidor, certificado e token
+          kubectl config set-cluster do-nyc1-k8s-devops \
+            --server=https://41129ac3-4d1c-458c-9752-c81dd268c049.k8s.ondigitalocean.com \
+            --certificate-authority=ca.crt
+          
           kubectl config set-credentials do-nyc1-k8s-devops-admin --token=${{ secrets.DO_TOKEN }}
-          kubectl config set-context do-nyc1-k8s-devops --cluster=do-nyc1-k8s-devops --user=do-nyc1-k8s-devops-admin
+          
+          kubectl config set-context do-nyc1-k8s-devops \
+            --cluster=do-nyc1-k8s-devops \
+            --user=do-nyc1-k8s-devops-admin
+          
           kubectl config use-context do-nyc1-k8s-devops
 
       - name: Check Kubernetes cluster
-        run: kubectl get nodes
+        run: |
+          kubectl get nodes
 
       - name: Verify Kubernetes context
         run: kubectl config current-context
