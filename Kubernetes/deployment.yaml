@@ -1,4 +1,53 @@
-# Deployment da aplicação FakeShop
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgre
+  labels:
+    app: postgre
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgre
+  template:
+    metadata:
+      labels:
+        app: postgre
+    spec:
+      containers:
+      - name: postgre
+        image: postgres:13.16
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: fakeshop
+        - name: POSTGRES_PASSWORD
+          value: Pg1234
+        - name: POSTGRES_DB
+          value: fakeshop
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,76 +94,28 @@ spec:
           httpGet:
             path: /
             port: 5000
-          initialDelaySeconds: 60
+          initialDelaySeconds: 40
           timeoutSeconds: 5
           periodSeconds: 10
-          failureThreshold: 3
+          failureThreshold: 5
         livenessProbe:
           httpGet:
             path: /
             port: 5000
-          initialDelaySeconds: 90
+          initialDelaySeconds: 60
           timeoutSeconds: 5
-          periodSeconds: 10
-          failureThreshold: 3
+          periodSeconds: 20
+          failureThreshold: 5
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "2Gi"
-            cpu: "1"
+            memory: "512Mi"
+            cpu: "200m"
+
 ---
-# Deployment do banco de dados PostgreSQL
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgre
-  labels:
-    app: postgre
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgre
-  template:
-    metadata:
-      labels:
-        app: postgre
-    spec:
-      containers:
-      - name: postgre
-        image: postgres:13.16
-        ports:
-        - containerPort: 5432
-        env:
-        - name: POSTGRES_USER
-          value: fakeshop
-        - name: POSTGRES_PASSWORD
-          value: Pg1234
-        - name: POSTGRES_DB
-          value: fakeshop
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: postgres-data
-        resources:
-          requests:
-            memory: "2Gi"
-            cpu: "1"
-          limits:
-            memory: "4Gi"
-            cpu: "2"
-        livenessProbe:
-          tcpSocket:
-            port: 5432
-          initialDelaySeconds: 30
-          periodSeconds: 10
-      volumes:
-      - name: postgres-data
-        persistentVolumeClaim:
-          claimName: postgres-pvc
----
-# PersistentVolumeClaim (PVC) para o PostgreSQL
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -124,4 +125,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 5Gi
