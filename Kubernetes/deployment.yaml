@@ -2,10 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgre
-  labels:
-    app: postgre
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: postgre
@@ -26,25 +23,6 @@ spec:
           value: Pg1234
         - name: POSTGRES_DB
           value: fakeshop
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: postgres-data
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "200m"
-        livenessProbe:
-          tcpSocket:
-            port: 5432
-          initialDelaySeconds: 30
-          periodSeconds: 10
-      volumes:
-      - name: postgres-data
-        persistentVolumeClaim:
-          claimName: postgres-pvc
 
 ---
 
@@ -52,77 +30,33 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fakeshop
-  labels:
-    app: fakeshop
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: fakeshop
   template:
     metadata:
-      labels:
-        app: fakeshop
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '5000'
         prometheus.io/path: '/metrics'
+      labels:
+        app: fakeshop
     spec:
       containers:
       - name: fakeshop
-        image: tecnicocefet/fakeshop:latest
+        image: tecnicocefet/fake-shop:v1
         ports:
         - containerPort: 5000
         env:
-        - name: FLASK_APP
-          value: "index.py"
-        - name: FLASK_ENV
-          value: "production"
         - name: DB_HOST
           value: postgre
-        - name: DB_PORT
-          value: "5432"
         - name: DB_USER
           value: fakeshop
         - name: DB_PASSWORD
           value: Pg1234
         - name: DB_NAME
           value: fakeshop
-        - name: DATABASE_URL
-          value: "postgresql+psycopg://fakeshop:Pg1234@postgre:5432/fakeshop?sslmode=disable"
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 5000
-          initialDelaySeconds: 40
-          timeoutSeconds: 5
-          periodSeconds: 10
-          failureThreshold: 5
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 5000
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          periodSeconds: 20
-          failureThreshold: 5
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "200m"
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+        - name: FLASK_APP
+          value: index.py

@@ -1,26 +1,7 @@
-# Service da aplicação FakeShop
-apiVersion: v1
-kind: Service
-metadata:
-  name: fakeshop
-  labels:
-    app: fakeshop
-spec:
-  selector:
-    app: fakeshop
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
-  type: LoadBalancer
----
-# Service do banco de dados PostgreSQL
 apiVersion: v1
 kind: Service
 metadata:
   name: postgre
-  labels:
-    app: postgre
 spec:
   selector:
     app: postgre
@@ -29,3 +10,18 @@ spec:
       port: 5432
       targetPort: 5432
   type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fakeshop
+spec:
+  selector:
+    app: fakeshop
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
