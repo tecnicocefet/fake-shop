@@ -47,7 +47,7 @@ jobs:
         run: |
           echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=kubeconfig.yaml
-          kubectl config use-context default  # Substitua 'default' pelo seu contexto do cluster, se necessário
+          kubectl config use-context do-nyc1-k8s-devops   # Substitua 'default' pelo seu contexto do cluster, se necessário
 
       - name: Apply Kubernetes manifests
         run: |
