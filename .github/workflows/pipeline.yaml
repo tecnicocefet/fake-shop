@@ -3,7 +3,7 @@ name: CI/CD Pipeline for Fake Shop
 on:
   push:
     branches:
-      - main  # Definindo para rodar apenas na branch principal
+      - main  # Ou o nome da sua branch principal
 
 jobs:
   # Job CI - Build e Push da imagem Docker
@@ -50,9 +50,13 @@ jobs:
         run: |
           echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=kubeconfig.yaml
+          # Depuração para verificar o kubeconfig
+          cat kubeconfig.yaml
+          kubectl config view
 
       - name: Verify Kubernetes context
-        run: kubectl config current-context
+        run: |
+          kubectl config current-context
 
       - name: Replace image tag in manifests dynamically
         run: |
