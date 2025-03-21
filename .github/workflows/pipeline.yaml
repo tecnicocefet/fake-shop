@@ -28,11 +28,11 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:${GITHUB_SHA}"
+          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fakeshop:${GITHUB_SHA}"
           docker build -t $IMAGE_TAG ./src
-          docker tag $IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/fake-shop:latest
+          docker tag $IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/fakeshop:latest
           docker push $IMAGE_TAG
-          docker push ${{ secrets.DOCKER_USERNAME }}/fake-shop:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/fakeshop:latest
 
   # Job CD - Deploy no Kubernetes
   cd:
@@ -79,7 +79,7 @@ jobs:
 
       - name: Replace image tag in manifests dynamically
         run: |
-          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:${GITHUB_SHA}"
+          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fakeshop:${GITHUB_SHA}"
           sed -i "s|image:.*|image: $IMAGE_TAG|g" Kubernetes/deployment.yaml
 
       - name: Verify Kubernetes manifests
@@ -97,13 +97,13 @@ jobs:
 
       - name: Verify deployment pods
         run: |
-          kubectl get pods -l app=fake-shop -o wide
+          kubectl get pods -l app=fakeshop -o wide
 
       - name: Show logs from first pod
         run: |
-          POD_NAME=$(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}' -n default)
+          POD_NAME=$(kubectl get pods -l app=fakeshop -o jsonpath='{.items[0].metadata.name}' -n default)
           if [ -z "$POD_NAME" ]; then
-            echo "No pods found with the label app=fake-shop in default namespace"
+            echo "No pods found with the label app=fakeshop in default namespace"
             kubectl get pods --all-namespaces
             exit 1
           fi
