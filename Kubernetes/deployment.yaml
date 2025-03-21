@@ -1,9 +1,58 @@
-# Deployment do banco de dados
+# Deployment da aplicação web (FakeShop)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fakeshop
+  labels:
+    app: fakeshop
+spec:
+  replicas: 2  # Número de réplicas
+  selector:
+    matchLabels:
+      app: fakeshop
+  template:
+    metadata:
+      labels:
+        app: fakeshop
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '5000'
+        prometheus.io/path: '/metrics'
+    spec:
+      containers:
+      - name: fakeshop
+        image: tecnicocefet/fakeshop:latest  # Imagem da aplicação
+        ports:
+        - containerPort: 5000  # Porta usada pela aplicação
+        env:
+        - name: DB_HOST
+          value: postgre
+        - name: DB_USER
+          value: fakeshop
+        - name: DB_PASSWORD
+          value: Pg1234
+        - name: DB_NAME
+          value: fakeshop
+        - name: FLASK_APP
+          value: index.py
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+---
+
+# Deployment do banco de dados PostgreSQL
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgre
+  labels:
+    app: postgre
 spec:
+  replicas: 1  # Apenas uma réplica para o banco de dados
   selector:
     matchLabels:
       app: postgre
@@ -24,57 +73,3 @@ spec:
           value: Pg1234
         - name: POSTGRES_DB
           value: fakeshop
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgre
-spec:
-  selector:
-    app: postgre
-  ports:
-    - protocol: TCP
-      port: 5432
-      targetPort: 5432
-  type: ClusterIP
-
----
-
-# Deployment da aplicação web
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: fakeshop
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: fakeshop
-  template:
-    metadata:
-      annotations:
-        prometheus.io/scrape: 'true'
-        prometheus.io/port: '5000'
-        prometheus.io/path: '/metrics'
-      labels:
-        app: fakeshop
-    spec:
-      containers:
-      - name: fakeshop
-        image: tecnicocefet/fakeshop:latest
-        ports:
-        - containerPort: 5000
-        env:
-        - name: DB_HOST
-          value: postgre  # Nome do serviço PostgreSQL, já é 'postgre'
-        - name: DB_USER
-          value: fakeshop  # Nome do usuário do banco de dados
-        - name: DB_PASSWORD
-          value: Pg1234  # Senha do banco de dados
-        - name: DB_NAME
-          value: fakeshop  # Nome do banco de dados
-        - name: FLASK_APP
-          value: index.py  # Nome do arquivo principal da aplicação Flask
----
