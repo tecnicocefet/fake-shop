@@ -22,10 +22,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Verify Dockerfile
+        run: |
+          ls -l ./src/Dockerfile
+
       - name: Build and push Docker image
         run: |
           IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:$GITHUB_SHA"
-          docker build -t $IMAGE_TAG ./src  # Ajuste aqui para a pasta src
+          docker build -t $IMAGE_TAG ./src
           docker tag $IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/fake-shop:latest
           docker push $IMAGE_TAG
           docker push ${{ secrets.DOCKER_USERNAME }}/fake-shop:latest
@@ -52,17 +56,13 @@ jobs:
         run: |
           cat kubeconfig.yaml
 
-      - name: List Kubernetes contexts
+      - name: Verify Kubernetes context
         run: |
-          kubectl config get-contexts
+          kubectl config current-context
 
-      - name: Set Kubernetes context
+      - name: Verify Kubernetes manifests
         run: |
-          kubectl config use-context do-nyc1-k8s-devops
-
-      - name: Test cluster connection
-        run: |
-          kubectl get nodes
+          ls -l Kubernetes/deployment.yaml Kubernetes/service.yaml
 
       - name: Apply Kubernetes manifests
         run: |
@@ -77,3 +77,7 @@ jobs:
         run: |
           kubectl get pods -l app=fake-shop
           kubectl describe pod $(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
+
+      - name: Check pod logs
+        run: |
+          kubectl logs $(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
