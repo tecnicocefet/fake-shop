@@ -1,4 +1,4 @@
-# Deployment da aplicação web (FakeShop)
+# Deployment da aplicação FakeShop
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,24 +23,41 @@ spec:
       - name: fakeshop
         image: tecnicocefet/fakeshop:latest  # Imagem da aplicação
         ports:
-        - containerPort: 5000  # Porta usada pela aplicação
+        - containerPort: 5000  # Porta utilizada pela aplicação
         env:
         - name: DB_HOST
-          value: postgre
+          value: postgre  # Nome do serviço do PostgreSQL
+        - name: DB_PORT
+          value: "5432"  # Porta do banco de dados
         - name: DB_USER
-          value: fakeshop
+          value: fakeshop  # Usuário do banco de dados
         - name: DB_PASSWORD
-          value: Pg1234
+          value: Pg1234  # Senha do banco de dados
         - name: DB_NAME
-          value: fakeshop
-        - name: FLASK_APP
-          value: index.py
+          value: fakeshop  # Nome do banco de dados
         readinessProbe:
           httpGet:
             path: /
             port: 5000
-          initialDelaySeconds: 10
-          periodSeconds: 5
+          initialDelaySeconds: 20  # Tempo maior para inicialização
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30  # Verificação de vida
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
 
 ---
 
@@ -52,7 +69,7 @@ metadata:
   labels:
     app: postgre
 spec:
-  replicas: 1  # Apenas uma réplica para o banco de dados
+  replicas: 1  # Réplica única para o banco
   selector:
     matchLabels:
       app: postgre
@@ -68,8 +85,20 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_USER
-          value: fakeshop
+          value: fakeshop  # Usuário do banco de dados
         - name: POSTGRES_PASSWORD
-          value: Pg1234
+          value: Pg1234  # Senha do banco de dados
         - name: POSTGRES_DB
-          value: fakeshop
+          value: fakeshop  # Nome do banco de dados
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        livenessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
