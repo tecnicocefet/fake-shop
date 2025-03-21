@@ -46,17 +46,18 @@ jobs:
         with:
           version: 'v1.24.0'
 
-      - name: Set up Kubeconfig
+      - name: Set up Kubeconfig using token
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
-          export KUBECONFIG=kubeconfig.yaml
-          # Depuração para verificar o kubeconfig
-          cat kubeconfig.yaml
-          kubectl config view
+          kubectl config set-cluster do-nyc1-k8s-devops --server=https://41129ac3-4d1c-458c-9752-c81dd268c049.k8s.ondigitalocean.com
+          kubectl config set-credentials do-nyc1-k8s-devops-admin --token=${{ secrets.DO_TOKEN }}
+          kubectl config set-context do-nyc1-k8s-devops --cluster=do-nyc1-k8s-devops --user=do-nyc1-k8s-devops-admin
+          kubectl config use-context do-nyc1-k8s-devops
+
+      - name: Check Kubernetes cluster
+        run: kubectl get nodes
 
       - name: Verify Kubernetes context
-        run: |
-          kubectl config current-context
+        run: kubectl config current-context
 
       - name: Replace image tag in manifests dynamically
         run: |
