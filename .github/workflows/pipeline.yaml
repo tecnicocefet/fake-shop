@@ -72,5 +72,5 @@ jobs:
 
       - name: Verify deployment
         run: |
-          kubectl get pods -l app=fake-shop
-          kubectl describe pod $(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
+          POD_NAME=$(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
+          kubectl describe pod $POD_NAME
