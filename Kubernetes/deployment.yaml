@@ -25,6 +25,10 @@ spec:
         ports:
         - containerPort: 5000
         env:
+        - name: FLASK_APP
+          value: "index.py"
+        - name: FLASK_ENV
+          value: "production"
         - name: DB_HOST
           value: postgre
         - name: DB_PORT
@@ -55,11 +59,11 @@ spec:
           failureThreshold: 3
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
             memory: "1Gi"
             cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
 ---
 # Deployment do banco de dados PostgreSQL
 apiVersion: apps/v1
@@ -95,11 +99,11 @@ spec:
           name: postgres-data
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "500m"
-          limits:
             memory: "2Gi"
             cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
         livenessProbe:
           tcpSocket:
             port: 5432
