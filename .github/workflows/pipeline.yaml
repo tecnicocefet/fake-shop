@@ -3,7 +3,7 @@ name: CI/CD Pipeline for Fake Shop
 on:
   push:
     branches:
-      - main  # Ou o nome da sua branch principal
+      - main  # Definindo para rodar apenas na branch principal
 
 jobs:
   # Job CI - Build e Push da imagem Docker
@@ -23,12 +23,11 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Verify Dockerfile
-        run: |
-          ls -l ./src/Dockerfile
+        run: ls -l ./src/Dockerfile
 
       - name: Build and push Docker image
         run: |
-          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:$GITHUB_SHA"
+          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:${GITHUB_SHA}"
           docker build -t $IMAGE_TAG ./src
           docker tag $IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/fake-shop:latest
           docker push $IMAGE_TAG
@@ -49,35 +48,31 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          echo -e "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=kubeconfig.yaml
 
-      - name: Debug Kubeconfig
-        run: |
-          cat kubeconfig.yaml
-
       - name: Verify Kubernetes context
-        run: |
-          kubectl config current-context
+        run: kubectl config current-context
 
-      - name: Verify Kubernetes manifests
+      - name: Replace image tag in manifests dynamically
         run: |
-          ls -l Kubernetes/deployment.yaml Kubernetes/service.yaml
+          IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:${GITHUB_SHA}"
+          sed -i "s|image:.*|image: $IMAGE_TAG|g" Kubernetes/deployment.yaml
 
       - name: Apply Kubernetes manifests
         run: |
           kubectl apply -f Kubernetes/deployment.yaml
           kubectl apply -f Kubernetes/service.yaml
 
-      - name: Wait for Deployment to be ready
+      - name: Wait for Deployment rollout
         run: |
           kubectl rollout status deployment/fake-shop-deployment
 
-      - name: Verify deployment
+      - name: Verify deployment pods
         run: |
-          kubectl get pods -l app=fake-shop
-          kubectl describe pod $(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
+          kubectl get pods -l app=fake-shop -o wide
 
-      - name: Check pod logs
+      - name: Show logs from first pod
         run: |
-          kubectl logs $(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
+          POD_NAME=$(kubectl get pods -l app=fake-shop -o jsonpath='{.items[0].metadata.name}')
+          kubectl logs $POD_NAME
