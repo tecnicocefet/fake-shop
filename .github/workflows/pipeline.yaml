@@ -23,7 +23,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Verify Dockerfile
-        run: ls -l ./src/Dockerfile
+        run: |
+          ls -l ./src/Dockerfile
 
       - name: Build and push Docker image
         run: |
@@ -64,17 +65,26 @@ jobs:
           
           kubectl config use-context do-nyc1-k8s-devops
 
+      - name: Debug Kubeconfig
+        run: |
+          kubectl config view
+
       - name: Check Kubernetes cluster
         run: |
           kubectl get nodes
 
       - name: Verify Kubernetes context
-        run: kubectl config current-context
+        run: |
+          kubectl config current-context
 
       - name: Replace image tag in manifests dynamically
         run: |
           IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fake-shop:${GITHUB_SHA}"
           sed -i "s|image:.*|image: $IMAGE_TAG|g" Kubernetes/deployment.yaml
+
+      - name: Verify Kubernetes manifests
+        run: |
+          ls -l Kubernetes/deployment.yaml Kubernetes/service.yaml
 
       - name: Apply Kubernetes manifests
         run: |
