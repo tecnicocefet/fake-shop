@@ -63,7 +63,7 @@ spec:
     spec:
       containers:
       - name: fakeshop
-        image: tecnicocefet/fake-shop:v1
+        image: tecnicocefet/fakeshop:latest
         ports:
         - containerPort: 5000
         env:
@@ -77,18 +77,4 @@ spec:
           value: fakeshop  # Nome do banco de dados
         - name: FLASK_APP
           value: index.py  # Nome do arquivo principal da aplicação Flask
-
 ---
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: fakeshop
-spec:
-  selector:
-    app: fakeshop
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
-  type: LoadBalancer
