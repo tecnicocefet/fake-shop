@@ -49,10 +49,6 @@ jobs:
           export KUBECONFIG=kubeconfig.yaml
           kubectl config use-context do-nyc1-k8s-devops
 
-      - name: Debug Kubeconfig
-        run: |
-          cat kubeconfig.yaml
-
       - name: Verify Kubernetes context
         run: |
           kubectl config current-context
