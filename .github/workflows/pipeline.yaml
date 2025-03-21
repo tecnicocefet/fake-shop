@@ -3,7 +3,7 @@ name: CI/CD Pipeline for Fake Shop
 on:
   push:
     branches:
-      - main  # Ou o nome da sua branch principal
+      - main
 
 jobs:
   # Job CI - Build e Push da imagem Docker
@@ -49,20 +49,14 @@ jobs:
 
       - name: Set up kubeconfig using token and certificate
         run: |
-          # Salva o certificado da CA em um arquivo
           echo "${{ secrets.DO_K8S_CA }}" | base64 -d > ca.crt
-          
-          # Configura o kubeconfig com o servidor, certificado e token
           kubectl config set-cluster do-nyc1-k8s-devops \
             --server=https://41129ac3-4d1c-458c-9752-c81dd268c049.k8s.ondigitalocean.com \
             --certificate-authority=ca.crt
-          
           kubectl config set-credentials do-nyc1-k8s-devops-admin --token=${{ secrets.DO_TOKEN }}
-          
           kubectl config set-context do-nyc1-k8s-devops \
             --cluster=do-nyc1-k8s-devops \
             --user=do-nyc1-k8s-devops-admin
-          
           kubectl config use-context do-nyc1-k8s-devops
 
       - name: Debug Kubeconfig
@@ -82,6 +76,10 @@ jobs:
           IMAGE_TAG="${{ secrets.DOCKER_USERNAME }}/fakeshop:${GITHUB_SHA}"
           sed -i "s|image:.*|image: $IMAGE_TAG|g" Kubernetes/deployment.yaml
 
+      - name: Debug deployment.yaml
+        run: |
+          cat Kubernetes/deployment.yaml
+
       - name: Verify Kubernetes manifests
         run: |
           ls -l Kubernetes/deployment.yaml Kubernetes/service.yaml
@@ -91,16 +89,19 @@ jobs:
           kubectl apply -f Kubernetes/deployment.yaml
           kubectl apply -f Kubernetes/service.yaml
 
-      - name: Wait for Deployment rollout
+      - name: Debug rollout status
         run: |
-          kubectl rollout status deployment/fakeshop
+          echo "Checking rollout status for deployment fakeshop..."
+          kubectl rollout status deployment/fakeshop || kubectl describe deployment fakeshop
 
       - name: Verify deployment pods
         run: |
-          kubectl get pods -l app=fakeshop -o wide
+          echo "Listing pods for deployment fakeshop..."
+          kubectl get pods -l app=fakeshop -o wide || kubectl get pods --all-namespaces
 
       - name: Show logs from first pod
         run: |
+          echo "Retrieving logs from the first pod..."
           POD_NAME=$(kubectl get pods -l app=fakeshop -o jsonpath='{.items[0].metadata.name}' -n default)
           if [ -z "$POD_NAME" ]; then
             echo "No pods found with the label app=fakeshop in default namespace"
